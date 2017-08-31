@@ -1,0 +1,44 @@
+{
+    "variables": {
+        "aws_access_key": "",
+        "aws_secret_key": "",
+        "aws_region": "sa-east-1",
+        "mongodb_version": "3.4"
+    },
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "access_key": "{{user `aws_access_key`}}",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "region": "{{user `aws_region`}}",
+            "source_ami": "ami-6e1a0117",
+            "instance_type": "t2.micro",
+            "ssh_username": "ubuntu",
+            "ami_name": "openvpn-pritunl-{{timestamp}}"
+        }
+    ],
+    "provisioners": [{
+            "type": "shell",
+            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'",
+            "inline": [
+                "echo 'deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/{{user `mongodb_version`}} multiverse' > /etc/apt/sources.list.d/mongodb-org-{{user `mongodb_version`}}.list",
+                "echo 'deb http://repo.pritunl.com/stable/apt xenial main' > /etc/apt/sources.list.d/pritunl.list",
+                "apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 0C49F3730359A14518585931BC711F9BA15703C6",
+                "apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7568D9BB55FF9E5287D586017AE645C0CF8E292A",
+                "apt-get --assume-yes update",
+                "apt-get --assume-yes dist-upgrade",
+                "apt-get --assume-yes install awscli htop iftop iotop language-pack-pt mongodb-org pritunl",
+                "systemctl enable pritunl mongod"
+            ]
+        },{
+            "type": "shell",
+            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'",
+            "inline": [
+                "echo '* hard nofile 64000' > /etc/security/limits.d/pritunl.conf",
+                "echo '* soft nofile 64000' >> /etc/security/limits.d/pritunl.conf",
+                "echo 'root hard nofile 64000' >> /etc/security/limits.d/pritunl.conf",
+                "echo 'root soft nofile 64000' >> /etc/security/limits.d/pritunl.conf"
+            ]
+        }
+    ]
+}
