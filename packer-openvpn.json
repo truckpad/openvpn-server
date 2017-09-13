@@ -2,7 +2,7 @@
     "variables": {
         "aws_access_key": "",
         "aws_secret_key": "",
-        "aws_region": "sa-east-1",
+        "aws_region": "us-west-2",
         "openvpn_version": "stable",
         "mongodb_version": "3.4"
     },
@@ -28,9 +28,9 @@
                 "apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 0C49F3730359A14518585931BC711F9BA15703C6",
                 "apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7568D9BB55FF9E5287D586017AE645C0CF8E292A",
                 "wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg|apt-key add -",
-                "apt-get --assume-yes update",
-                "apt-get --assume-yes dist-upgrade",
-                "apt-get --assume-yes install awscli htop iftop iotop language-pack-pt mongodb-org pritunl python-boto3 python-pip",
+                "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes update",
+                "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes dist-upgrade",
+                "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install awscli htop iftop iotop language-pack-pt mongodb-org pritunl python-boto3 python-pip",
                 "systemctl enable pritunl mongod"
             ]
         },{
