@@ -21,8 +21,8 @@
     "provisioners": [
         {
             "type": "file",
-            "source": "./src/",
-            "destination": "/tmp/ec2-openvpn-server"
+            "source": "./src",
+            "destination": "/tmp/"
         },{
             "type": "shell",
             "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'",
@@ -36,7 +36,7 @@
                 "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes update",
                 "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes dist-upgrade",
                 "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install awscli htop iftop iotop language-pack-pt mongodb-org pritunl python-boto3 python-pip",
-                "/tmp/ec2-openvpn-server/setup.py install",
+                "cd /tmp/src/ && ./setup.py install",
                 "systemctl enable pritunl mongod"
             ]
         },{
