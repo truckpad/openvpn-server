@@ -18,12 +18,17 @@
             "ami_name": "openvpn-pritunl-{{timestamp}}"
         }
     ],
-    "provisioners": [{
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "./src/",
+            "destination": "/tmp/ec2-openvpn-server"
+        },{
             "type": "shell",
             "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'",
             "inline": [
                 "echo 'deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/{{user `mongodb_version`}} multiverse' > /etc/apt/sources.list.d/mongodb-org-{{user `mongodb_version`}}.list",
-                "echo 'deb http://repo.pritunl.com/stable/apt xenial main' > /etc/apt/sources.list.d/pritunl.list",
+                "echo 'deb http://repo.pritunl.com  /stable/apt xenial main' > /etc/apt/sources.list.d/pritunl.list",
                 "echo 'deb http://build.openvpn.net/debian/openvpn/{{user `openvpn_version`}} xenial main' > /etc/apt/sources.list.d/openvpn-{{user `openvpn_version`}}.list",
                 "apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 0C49F3730359A14518585931BC711F9BA15703C6",
                 "apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7568D9BB55FF9E5287D586017AE645C0CF8E292A",
@@ -31,6 +36,7 @@
                 "apt-get --assume-yes update",
                 "apt-get --assume-yes dist-upgrade",
                 "apt-get --assume-yes install awscli htop iftop iotop language-pack-pt mongodb-org pritunl python-boto3 python-pip",
+                "/tmp/ec2-openvpn-server/setup.py install",
                 "systemctl enable pritunl mongod"
             ]
         },{

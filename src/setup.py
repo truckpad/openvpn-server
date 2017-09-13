@@ -14,6 +14,10 @@ setup(
     download_url='https://github.com/truckpad/openvpn-server/',
     keywords=['aws', 'vpn', 'openvpn', 'vpc', 'pritunl'],
     # long_description=open('README.md').read(),
-    scripts=['ec2-openvpn-server/provisioner.py'],
+    scripts=[
+        'ec2-openvpn-server/attach_to_vpc.py',
+        'ec2-openvpn-server/mongodb_backup.sh',
+        'ec2-openvpn-server/mongodb_restore.sh'
+    ],
     install_requires=open('requirements.txt').read().strip('\n').split('\n')
 )
