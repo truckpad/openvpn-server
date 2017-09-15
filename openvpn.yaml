@@ -52,7 +52,7 @@ Resources:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties: 
             VPCZoneIdentifier:
-                Fn::ImportValue: !Sub ${VPCClusterName}-public-subnets
+                Fn::Split: [",", !ImportValue Fn::Sub: "${VPCClusterName}-public-subnets"]
             LaunchConfigurationName: !Ref EC2LaunchConfiguration
             MinSize: 1
             MaxSize: 1
