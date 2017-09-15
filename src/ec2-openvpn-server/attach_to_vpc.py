@@ -129,7 +129,7 @@ ________                     ____   _____________________
     import argparse
     parser = argparse.ArgumentParser(description='Update VPC Route table for this VPN instance')
     parser.add_argument('vpn_domain', type=str, help='Domain to create the "vpc" subdomain. Must live in Route53.')
-    parser.add_argument('vpn_cidr', type=str, help='CIDR network to be used internally by VPN clients.')
+    parser.add_argument('vpn_cidr', type=str, help='CIDR network block to be used internally by VPN clients.')
     args = parser.parse_args()
 
     print("\n\tCIDR: %s\t\tHosted Zone: %s\n" % (args.vpn_cidr, args.vpn_domain))

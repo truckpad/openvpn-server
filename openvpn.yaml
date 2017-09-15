@@ -16,6 +16,18 @@ Parameters:
         Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS cluster
         Type: AWS::EC2::KeyPair::KeyName
 
+    MongoBackupBucket:
+        Description: S3 Bucket containing MongoDB Backup
+        Type: String
+
+    VPNDomain:
+        Description: Route53 domain to create an "vpn" entry
+        Type: String
+
+    VPNSubnet:
+        Description: CIDR network block to be used internally by VPN clients. Have to be different than the VPN CIDR block.
+        Type: String
+
 Metadata:
 
     AWS::CloudFormation::Interface:
@@ -70,7 +82,9 @@ Resources:
             UserData: 
                 "Fn::Base64": !Sub |
                     #!/bin/bash
-                    yum install -y aws-cfn-bootstrap
+                    mongodb_restore.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl
+                    echo "0 */12 * * * mongodb_backup.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl" > /etc/cron.d/pritunl-backup
+                    attach_to_vpc.py ${VPNDomain} ${VPNSubnet}
 
     # This security group defines who/where is allowed to access the EC2 instance directly.
     # By default we're just allowing access from the load balancer.  If you want to SSH 
