@@ -1,1 +1,100 @@
-#
+Description: >
+
+    This template deploys an EC2 instance with OpenVPN-Pritunl services.
+
+Parameters:
+
+    VPCClusterName:
+        Description: The VPC Name on CloudFormation Exports
+        Type: String
+
+    AMIBaseId:
+        Description: AMI base prepared with OpenVPN-Pritunl to launch the EC2 instance
+        Type: AWS::EC2::Image::Id
+
+    KeyName:
+        Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS cluster
+        Type: AWS::EC2::KeyPair::KeyName
+
+Metadata:
+
+    AWS::CloudFormation::Interface:
+        ParameterGroups:
+            - Label:
+                default: VPN Settings
+              Parameters:
+                - VPCClusterName
+                - AMIBaseId
+                - KeyName
+        ParameterLabels:
+            VPCClusterName:
+                default: VPC Exported name
+            AMIBaseId:
+                default: AMI Base Id
+            KeyName: 
+                default: SSH Key Name
+
+Resources:
+
+    EC2AutoScalingGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties: 
+            VPCZoneIdentifier:
+                Fn::ImportValue: !Sub ${VPCClusterName}-public-subnets
+            LaunchConfigurationName: !Ref EC2LaunchConfiguration
+            MinSize: 1
+            MaxSize: 1
+            DesiredCapacity: 1
+            Tags: 
+                - Key: Name
+                  Value: !Sub ${AWS::StackName}
+                  PropagateAtLaunch: true
+        CreationPolicy:
+            ResourceSignal: 
+                Timeout: PT15M
+        UpdatePolicy:
+            AutoScalingRollingUpdate:
+                MinInstancesInService: 1
+                MaxBatchSize: 1
+                PauseTime: PT15M
+                WaitOnResourceSignals: true
+
+    EC2LaunchConfiguration:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            ImageId: !Ref AMIBaseId
+            InstanceType: t2.nano
+            SecurityGroups: 
+                - !Ref SecurityGroup
+            KeyName: !Ref KeyName
+            UserData: 
+                "Fn::Base64": !Sub |
+                    #!/bin/bash
+                    yum install -y aws-cfn-bootstrap
+
+    # This security group defines who/where is allowed to access the EC2 instance directly.
+    # By default we're just allowing access from the load balancer.  If you want to SSH 
+    # into the hosts, or expose non-load balanced services you can open their ports here.
+    SecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties: 
+            VpcId:
+                Fn::ImportValue: !Sub ${VPCClusterName}
+            GroupDescription: Access to the VPN/EC2 instance
+            SecurityGroupIngress:
+                # Allow SSH access from anywhere to our EC2 instance
+                - CidrIp: 0.0.0.0/0
+                  FromPort: '22'
+                  ToPort: '22'
+                  IpProtocol: tcp
+                - CidrIp: 0.0.0.0/0
+                  FromPort: '443'
+                  ToPort: '443'
+                  IpProtocol: tcp
+                - CidrIp: 0.0.0.0/0
+                  FromPort: '0'
+                  ToPort: '65535'
+                  IpProtocol: udp
+            Tags: 
+                - Key: Name
+                  Value: !Sub ${AWS::StackName}
