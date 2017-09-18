@@ -18,11 +18,12 @@ class OpenVPN(object):
 
     @staticmethod
     def get_region():
-        return requests.get('http://169.254.169.254/latest/meta-data/placement/availability-zone').text[0:-1]
-
+        # return requests.get('http://169.254.169.254/latest/meta-data/placement/availability-zone').text[0:-1]
+        return 'us-west-2'
     @staticmethod
     def get_instance_id():
-        return requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
+        # return requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
+        return 'i-0fdc1990375a9b33f'
 
     @staticmethod
     def get_instance(region, instance_id):
@@ -59,8 +60,8 @@ class OpenVPN(object):
             StartRecordType='A',
             MaxItems='1'
         )
-        record_set = record_sets['ResourceRecordSets'][0]
-        if record_set['Name'] == vpn_domain and len(record_set.get('ResourceRecords', [])) == 1 and record_set['ResourceRecords'][0]['Value'] == public_ip:
+        record_set = record_sets['ResourceRecordSets'][0] if len(record_sets['ResourceRecordSets']) == 1 else None
+        if record_set and record_set['Name'] == vpn_domain and len(record_set.get('ResourceRecords', [])) == 1 and record_set['ResourceRecords'][0]['Value'] == public_ip:
             print('Domain name "%s" is set up properly. :)' % vpn_domain)
         else:
             print('Domain name "%s" is not set up properly. Fixing it!' % vpn_domain)
@@ -113,7 +114,7 @@ class OpenVPN(object):
 
     def check_aws_config(self):
         ''' Do everything, in the right sequence! :D '''
-        self.update_route_tables()
+        # self.update_route_tables()
         self.update_dns_record()
 
 
