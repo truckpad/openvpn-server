@@ -80,6 +80,7 @@ Resources:
             InstanceType: t2.nano
             SecurityGroups: 
                 - !Ref SecurityGroup
+            IamInstanceProfile: !Ref EC2InstanceProfile
             KeyName: !Ref KeyName
             UserData: 
                 "Fn::Base64": !Sub |
@@ -114,3 +115,47 @@ Resources:
             Tags: 
                 - Key: Name
                   Value: !Sub ${AWS::StackName}
+
+    # This IAM Role is attached to the VPN host.
+    EC2Role:
+        Type: AWS::IAM::Role
+        Properties: 
+            Path: /
+            RoleName: !Sub ${AWS::StackName}-EC2RoleNormal-${AWS::Region}
+            AssumeRolePolicyDocument: |
+                {
+                    "Statement": [{
+                        "Action": "sts:AssumeRole",
+                        "Effect": "Allow",
+                        "Principal": { 
+                            "Service": "ec2.amazonaws.com" 
+                        }
+                    }]
+                }
+            Policies: 
+                - PolicyName: ec2-vpn-service
+                  PolicyDocument: |
+                    {
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": [
+                                "ec2:DescribeRouteTables",
+                                "ec2:DescribeInstances",
+                                "ec2:ReplaceRoute",
+                                "ec2:CreateRoute",
+                                "route53:ListHostedZonesByName",
+                                "route53:ListResourceRecordSets",
+                                "route53:ChangeResourceRecordSets",
+                                "s3:GetObject",
+                                "s3:PutObject"
+                            ],
+                            "Resource": "*"
+                        }]
+                    }
+
+    EC2InstanceProfile: 
+        Type: AWS::IAM::InstanceProfile
+        Properties:
+            Path: /
+            Roles: 
+                - !Ref EC2Role
