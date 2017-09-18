@@ -52,7 +52,9 @@ Resources:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties: 
             VPCZoneIdentifier:
-                Fn::Split: [",", Fn::ImportValue: !Sub "${VPCClusterName}-public-subnets"]
+                Fn::Split:
+                    - ','
+                    - Fn::ImportValue: !Sub ${VPCClusterName}-public-subnets
             LaunchConfigurationName: !Ref EC2LaunchConfiguration
             MinSize: 1
             MaxSize: 1
@@ -78,6 +80,7 @@ Resources:
             InstanceType: t2.nano
             SecurityGroups: 
                 - !Ref SecurityGroup
+            IamInstanceProfile: !Ref EC2InstanceProfile
             KeyName: !Ref KeyName
             UserData: 
                 "Fn::Base64": !Sub |
@@ -85,6 +88,8 @@ Resources:
                     mongodb_restore.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl
                     echo "0 */12 * * * mongodb_backup.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl" > /etc/cron.d/pritunl-backup
                     attach_to_vpc.py ${VPNDomain} ${VPNSubnet}
+                    /usr/local/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2LaunchConfiguration
+                    /usr/local/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2AutoScalingGroup
 
     # This security group defines who/where is allowed to access the EC2 instance directly.
     # By default we're just allowing access from the load balancer.  If you want to SSH 
@@ -112,3 +117,47 @@ Resources:
             Tags: 
                 - Key: Name
                   Value: !Sub ${AWS::StackName}
+
+    # This IAM Role is attached to the VPN host.
+    EC2Role:
+        Type: AWS::IAM::Role
+        Properties: 
+            Path: /
+            RoleName: !Sub ${AWS::StackName}-EC2RoleNormal-${AWS::Region}
+            AssumeRolePolicyDocument: |
+                {
+                    "Statement": [{
+                        "Action": "sts:AssumeRole",
+                        "Effect": "Allow",
+                        "Principal": { 
+                            "Service": "ec2.amazonaws.com" 
+                        }
+                    }]
+                }
+            Policies: 
+                - PolicyName: ec2-vpn-service
+                  PolicyDocument: |
+                    {
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": [
+                                "ec2:DescribeRouteTables",
+                                "ec2:DescribeInstances",
+                                "ec2:ReplaceRoute",
+                                "ec2:CreateRoute",
+                                "route53:ListHostedZonesByName",
+                                "route53:ListResourceRecordSets",
+                                "route53:ChangeResourceRecordSets",
+                                "s3:GetObject",
+                                "s3:PutObject"
+                            ],
+                            "Resource": "*"
+                        }]
+                    }
+
+    EC2InstanceProfile: 
+        Type: AWS::IAM::InstanceProfile
+        Properties:
+            Path: /
+            Roles: 
+                - !Ref EC2Role
