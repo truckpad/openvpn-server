@@ -88,6 +88,8 @@ Resources:
                     mongodb_restore.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl
                     echo "0 */12 * * * mongodb_backup.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl" > /etc/cron.d/pritunl-backup
                     attach_to_vpc.py ${VPNDomain} ${VPNSubnet}
+                    /usr/local/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2LaunchConfiguration
+                    /usr/local/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2AutoScalingGroup
 
     # This security group defines who/where is allowed to access the EC2 instance directly.
     # By default we're just allowing access from the load balancer.  If you want to SSH 
