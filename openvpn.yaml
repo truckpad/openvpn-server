@@ -85,9 +85,11 @@ Resources:
             UserData: 
                 "Fn::Base64": !Sub |
                     #!/bin/bash
+                    attach_to_vpc.py ${VPNDomain} ${VPNSubnet}
                     mongodb_restore.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl
                     echo "0 */12 * * * mongodb_backup.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl" > /etc/cron.d/pritunl-backup
-                    attach_to_vpc.py ${VPNDomain} ${VPNSubnet}
+                    pritunl set-mongodb mongodb://localhost:27017/pritunl
+                    service pritunl restart
                     /usr/local/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2AutoScalingGroup
 
     # This security group defines who/where is allowed to access the EC2 instance directly.
