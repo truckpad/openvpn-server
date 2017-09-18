@@ -18,12 +18,11 @@ class OpenVPN(object):
 
     @staticmethod
     def get_region():
-        # return requests.get('http://169.254.169.254/latest/meta-data/placement/availability-zone').text[0:-1]
-        return 'us-west-2'
+        return requests.get('http://169.254.169.254/latest/meta-data/placement/availability-zone').text[0:-1]
+
     @staticmethod
     def get_instance_id():
-        # return requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
-        return 'i-0fdc1990375a9b33f'
+        return requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
 
     @staticmethod
     def get_instance(region, instance_id):
