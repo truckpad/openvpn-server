@@ -37,7 +37,8 @@
                 "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes dist-upgrade",
                 "DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install awscli htop iftop iotop language-pack-pt mongodb-org pritunl python-boto3 python-pip",
                 "cd /tmp/src/ && ./setup.py install",
-                "systemctl enable pritunl mongod"
+                "systemctl enable pritunl mongod",
+                "pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
             ]
         },{
             "type": "shell",
