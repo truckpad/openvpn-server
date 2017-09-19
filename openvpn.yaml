@@ -103,7 +103,7 @@ Resources:
             GroupDescription: Access to the VPN/EC2 instance
             SecurityGroupIngress:
                 # Allow SSH access from anywhere to our EC2 instance
-                - CidrIp: 0.0.0.0/0
+                - CidrIp: !Ref VPNSubnet
                   FromPort: '22'
                   ToPort: '22'
                   IpProtocol: tcp
