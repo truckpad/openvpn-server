@@ -141,7 +141,7 @@ Resources:
                 }
             Policies: 
                 - PolicyName: ec2-vpn-service
-                  PolicyDocument: |
+                  PolicyDocument: !Sub |
                     {
                         "Statement": [{
                             "Effect": "Allow",
@@ -152,11 +152,17 @@ Resources:
                                 "ec2:CreateRoute",
                                 "route53:ListHostedZonesByName",
                                 "route53:ListResourceRecordSets",
-                                "route53:ChangeResourceRecordSets",
+                                "route53:ChangeResourceRecordSets"
+                            ],
+                            "Resource": "*"
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": [
                                 "s3:GetObject",
                                 "s3:PutObject"
                             ],
-                            "Resource": "*"
+                            "Resource": "arn:aws:s3:::${MongoBackupBucket}/*"
                         }]
                     }
 
