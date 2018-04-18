@@ -87,7 +87,7 @@ Resources:
                     #!/bin/bash
                     attach_to_vpc.py ${VPNDomain} ${VPNSubnet}
                     mongodb_restore.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl
-                    echo "0 */12 * * * mongodb_backup.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl" > /etc/cron.d/pritunl-backup
+                    echo "0 */12 * * * root /usr/local/bin/mongodb_backup.sh ${MongoBackupBucket} vpn.${VPNDomain} pritunl" > /etc/cron.d/pritunl-backup
                     pritunl set-mongodb mongodb://localhost:27017/pritunl
                     service pritunl restart
                     /usr/local/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2AutoScalingGroup
