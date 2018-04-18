@@ -115,6 +115,10 @@ Resources:
                   FromPort: '0'
                   ToPort: '65535'
                   IpProtocol: udp
+                - CidrIp: 0.0.0.0/0
+                  FromPort: '80'
+                  ToPort: '80'
+                  IpProtocol: tcp
             Tags: 
                 - Key: Name
                   Value: !Sub ${AWS::StackName}
