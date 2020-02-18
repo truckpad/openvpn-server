@@ -28,6 +28,17 @@ Parameters:
         Description: CIDR network block to be used internally by VPN clients. Have to be different than the VPN CIDR block.
         Type: String
 
+    ApplyResources:
+        Description: Let the VPN server up and Running
+        Type: String
+        Default: 'no'
+        AllowedValues: ['no', 'yes']
+
+
+Conditions:
+    ShouldApplyResource: !Equals [ !Ref ApplyResources, 'yes' ]
+
+
 Metadata:
 
     AWS::CloudFormation::Interface:
@@ -50,6 +61,7 @@ Resources:
 
     EC2AutoScalingGroup:
         Type: AWS::AutoScaling::AutoScalingGroup
+        Condition: ShouldApplyResource
         Properties: 
             VPCZoneIdentifier:
                 Fn::Split:
@@ -75,6 +87,7 @@ Resources:
 
     EC2LaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration
+        Condition: ShouldApplyResource
         Properties:
             ImageId: !Ref AMIBaseId
             InstanceType: t2.nano
@@ -126,6 +139,7 @@ Resources:
     # This IAM Role is attached to the VPN host.
     EC2Role:
         Type: AWS::IAM::Role
+        Condition: ShouldApplyResource
         Properties: 
             Path: /
             RoleName: !Sub ${AWS::StackName}-EC2RoleNormal-${AWS::Region}
@@ -160,6 +174,7 @@ Resources:
                             "Effect": "Allow",
                             "Action": [
                                 "s3:GetObject",
+                                "s3:HeadObject",
                                 "s3:PutObject"
                             ],
                             "Resource": "arn:aws:s3:::${MongoBackupBucket}/*"
@@ -168,6 +183,7 @@ Resources:
 
     EC2InstanceProfile: 
         Type: AWS::IAM::InstanceProfile
+        Condition: ShouldApplyResource
         Properties:
             Path: /
             Roles: 
