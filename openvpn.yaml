@@ -5,8 +5,16 @@ Description: >
 Parameters:
 
     VPCClusterName:
-        Description: The VPC Name on CloudFormation Exports
+        Description: The VPC Name on CloudFormation Exports (Optional)
         Type: String
+
+    ExistingVpcId:
+        Description: The VPC Id of non-CloudFormation resource (Optional)
+        Type: AWS::EC2::VPC::Id
+
+    ExistingPublicSubnets:
+        Description: The VPC Public Subnets (required for non-CloudFormation VPC)
+        Type: List<AWS::EC2::Subnet::Id>
 
     AMIBaseId:
         Description: AMI base prepared with OpenVPN-Pritunl to launch the EC2 instance
@@ -37,6 +45,7 @@ Parameters:
 
 Conditions:
     ShouldApplyResource: !Equals [ !Ref ApplyResources, 'yes' ]
+    HasCfnVpc: !Not [ !Equals [ !Ref VPCClusterName, '' ] ]
 
 
 Metadata:
@@ -47,11 +56,17 @@ Metadata:
                 default: VPN Settings
               Parameters:
                 - VPCClusterName
+                - ExistingVpcId
+                - ExistingPublicSubnets
                 - AMIBaseId
                 - KeyName
         ParameterLabels:
             VPCClusterName:
                 default: VPC Exported name
+            ExistingVpcId:
+                default: VPC Id
+            ExistingPublicSubnets:
+                default: Public Subnets
             AMIBaseId:
                 default: AMI Base Id
             KeyName: 
@@ -64,9 +79,12 @@ Resources:
         Condition: ShouldApplyResource
         Properties: 
             VPCZoneIdentifier:
-                Fn::Split:
-                    - ','
-                    - Fn::ImportValue: !Sub ${VPCClusterName}-public-subnets
+                Fn::If:
+                    - HasCfnVpc
+                    - Fn::Split:
+                        - ','
+                        - Fn::ImportValue: !Sub ${VPCClusterName}-public-subnets
+                    - !Ref ExistingPublicSubnets
             LaunchConfigurationName: !Ref EC2LaunchConfiguration
             MinSize: 1
             MaxSize: 2
@@ -112,7 +130,10 @@ Resources:
         Type: AWS::EC2::SecurityGroup
         Properties: 
             VpcId:
-                Fn::ImportValue: !Sub ${VPCClusterName}
+                Fn::If:
+                    - HasCfnVpc
+                    - Fn::ImportValue: !Sub ${VPCClusterName}
+                    - !Ref ExistingVpcId
             GroupDescription: Access to the VPN/EC2 instance
             SecurityGroupIngress:
                 # Allow SSH access from anywhere to our EC2 instance
